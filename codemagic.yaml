@@ -1,0 +1,51 @@
+workflows:
+  ios_app_store:
+    name: iOS App Store
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        # Change this to your real bundle identifier before building
+        BUNDLE_ID: staylit.lighting
+    cache:
+      cache_default_paths: true
+    scripts:
+      - name: Flutter pub get
+        script: flutter pub get
+      - name: Ensure bundle identifier matches env
+        script: |
+          python3 - <<'PY'
+          import os, re
+          path = "ios/Runner.xcodeproj/project.pbxproj"
+          bundle = os.environ.get("BUNDLE_ID")
+          if not bundle:
+              print("BUNDLE_ID not set; skipping")
+              raise SystemExit(0)
+          with open(path, "r", encoding="utf-8") as f:
+              s = f.read()
+          s2 = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER = [^;]+;', f'PRODUCT_BUNDLE_IDENTIFIER = {bundle};', s)
+          if s2 != s:
+              with open(path, "w", encoding="utf-8") as f:
+                  f.write(s2)
+              print("Updated bundle identifiers to", bundle)
+          else:
+              print("No changes needed")
+          PY
+      - name: Fetch signing files from App Store Connect
+        script: app-store-connect fetch-signing-files --type IOS_APP_STORE --bundle-id "$BUNDLE_ID" --create
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+      - name: Use provisioning profiles
+        script: xcode-project use-profiles
+      - name: Build IPA for App Store
+        script: flutter build ipa --release --export-method app-store
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        api_key: 893988e1-c9d1-44bb-b1fd-182b55769c98
+        key_id: D542J2AB93
+        issuer_id: 893988e1-c9d1-44bb-b1fd-182b55769c98
+        submit_to_testflight: true
