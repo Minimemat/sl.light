@@ -24,11 +24,47 @@ class AuthLoginRequested extends AuthEvent {
 class AuthRegisterRequested extends AuthEvent {
   final String email;
   final String password;
+  final String? firstName;
+  final String? lastName;
+  final String? phone;
+  final String? address;
+  final String? city;
+  final String? province;
+  final String? postalCode;
+  final String? country;
+  final DateTime? installationDate;
+  final bool registerForWarranty;
 
-  AuthRegisterRequested({required this.email, required this.password});
+  AuthRegisterRequested({
+    required this.email,
+    required this.password,
+    this.firstName,
+    this.lastName,
+    this.phone,
+    this.address,
+    this.city,
+    this.province,
+    this.postalCode,
+    this.country,
+    this.installationDate,
+    required this.registerForWarranty,
+  });
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [
+    email,
+    password,
+    firstName,
+    lastName,
+    phone,
+    address,
+    city,
+    province,
+    postalCode,
+    country,
+    installationDate,
+    registerForWarranty,
+  ];
 }
 
 class AuthLogoutRequested extends AuthEvent {}
@@ -41,7 +77,14 @@ abstract class AuthState extends Equatable {
   List<Object?> get props => [];
 }
 
-class AuthUnauthenticated extends AuthState {}
+class AuthUnauthenticated extends AuthState {
+  final DateTime timestamp;
+
+  AuthUnauthenticated() : timestamp = DateTime.now();
+
+  @override
+  List<Object?> get props => [timestamp];
+}
 
 class AuthAuthenticating extends AuthState {}
 
@@ -72,10 +115,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     print('🔐 AUTH: AuthBloc constructor called');
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
-    on<AuthLogoutRequested>((event, emit) {
-      print('🔐 AUTH: AuthLogoutRequested event received');
-      _onLogoutRequested(event, emit);
-    });
+    on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthCheckStoredUser>(_onCheckStoredUser);
   }
 
@@ -110,6 +150,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authService.register(
         email: event.email,
         password: event.password,
+        firstName: event.firstName,
+        lastName: event.lastName,
+        phone: event.phone,
+        address: event.address,
+        city: event.city,
+        province: event.province,
+        postalCode: event.postalCode,
+        country: event.country,
+        installationDate: event.installationDate,
+        registerForWarranty: event.registerForWarranty,
       );
 
       // Save user data for persistent login
@@ -125,6 +175,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    print('🔐 AUTH: AuthLogoutRequested event received');
     print('🔐 AUTH: Logout requested');
     try {
       // Clear stored user data

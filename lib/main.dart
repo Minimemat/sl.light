@@ -51,6 +51,7 @@ class StayLitApp extends StatelessWidget {
               print(
                 '🔐 MAIN: BlocBuilder rebuilding with state: ${state.runtimeType}',
               );
+              print('🔐 MAIN: Current state details: $state');
               if (state is AuthAuthenticated) {
                 print('🔐 MAIN: User authenticated, showing HomeScreen');
                 return const HomeScreen();

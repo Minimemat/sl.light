@@ -24,11 +24,22 @@ class WPApiService {
     }
   }
 
-  /// Register new user with admin credentials
+  /// Register new user with warranty information
   Future<User> register({
     required String email,
     required String password,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? address,
+    String? city,
+    String? province,
+    String? postalCode,
+    String? country,
+    DateTime? installationDate,
+    required bool registerForWarranty,
   }) async {
+    // Step 1: Create the user with basic info only
     final response = await http.post(
       Uri.parse('$wpApiUrl/wp/v2/users'),
       headers: {
@@ -41,15 +52,104 @@ class WPApiService {
         'email': email,
         'password': password,
         'roles': ['subscriber'],
+        'first_name': registerForWarranty ? (firstName ?? '') : '',
+        'last_name': registerForWarranty ? (lastName ?? '') : '',
       }),
     );
+
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // Registration successful, now login to get JWT
+      final userData = jsonDecode(response.body);
+      final userId = userData['id'];
+
+      // Step 2: If warranty info provided, update user meta separately
+      if (registerForWarranty) {
+        await _updateUserMeta(
+          userId: userId,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+          address: address,
+          city: city,
+          province: province,
+          postalCode: postalCode,
+          country: country,
+          installationDate: installationDate,
+        );
+      }
+
+      // Step 3: Login to get JWT
       return await login(email: email, password: password);
     } else {
       final data = jsonDecode(response.body);
       throw Exception(data['message'] ?? 'Registration failed');
     }
+  }
+
+  /// Update user meta fields for warranty information
+  Future<void> _updateUserMeta({
+    required int userId,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? address,
+    String? city,
+    String? province,
+    String? postalCode,
+    String? country,
+    DateTime? installationDate,
+  }) async {
+    final metaFields = {
+      'billing_first_name': firstName ?? '',
+      'billing_last_name': lastName ?? '',
+      'billing_phone': phone ?? '',
+      'billing_address_1': address ?? '',
+      'billing_city': city ?? '',
+      'billing_state': province ?? '',
+      'billing_postcode': postalCode ?? '',
+      'billing_country': _toCountryCode(country),
+      'installation_date': _toIsoDate(installationDate),
+      'warranty_registered': 'true',
+    };
+
+    // Update each meta field individually
+    for (var entry in metaFields.entries) {
+      try {
+        await http.post(
+          Uri.parse('$wpApiUrl/wp/v2/users/$userId'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Basic ${base64Encode(utf8.encode('$adminUsername:$applicationPassword'))}',
+          },
+          body: jsonEncode({
+            'meta': {entry.key: entry.value},
+          }),
+        );
+      } catch (e) {
+        print('Failed to update meta ${entry.key}: $e');
+        // Continue even if one meta field fails
+      }
+    }
+  }
+
+  String _toCountryCode(String? name) {
+    if (name == null) return '';
+    switch (name) {
+      case 'Canada':
+        return 'CA';
+      case 'United States':
+        return 'US';
+      default:
+        return name.length == 2 ? name.toUpperCase() : name;
+    }
+  }
+
+  String _toIsoDate(DateTime? dt) {
+    if (dt == null) return '';
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   /// Validate JWT token without fetching data

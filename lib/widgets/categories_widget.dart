@@ -77,51 +77,45 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
       'color': const Color(0xFFff6600),
     },
     {
-      'name': 'Ramadan',
-      'icon': Icons.mosque,
-      'index': 9,
-      'color': const Color(0xFF228b22),
-    },
-    {
       'name': 'Spring',
       'icon': Icons.local_florist,
-      'index': 10,
+      'index': 9,
       'color': const Color(0xFF90ee90),
     },
     {
       'name': 'Sports',
       'icon': Icons.sports,
-      'index': 11,
+      'index': 10,
       'color': const Color(0xFF32cd32),
     },
     {
       'name': 'St. Patrick\'s',
       'icon': Icons.grass,
-      'index': 12,
+      'index': 11,
       'color': const Color(0xFF00ff00),
     },
     {
       'name': 'Summer',
       'icon': Icons.wb_sunny,
-      'index': 13,
+      'index': 12,
       'color': const Color(0xFFffd700),
     },
     {
       'name': 'Valentines',
       'icon': Icons.favorite,
-      'index': 14,
+      'index': 13,
       'color': const Color(0xFFff69b4),
     },
     {
       'name': 'Winter',
       'icon': Icons.ac_unit,
-      'index': 15,
+      'index': 14,
       'color': const Color(0xFF87ceeb),
     },
     {
       'name': 'Other',
       'icon': Icons.more_horiz,
-      'index': 16,
+      'index': 15,
       'color': const Color(0xFF666666),
     },
   ];
@@ -220,7 +214,7 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
 
   Widget _buildExpandedView() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(maxHeight: 310),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -257,175 +251,199 @@ class _CategoriesWidgetState extends State<CategoriesWidget> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Grid of category buttons
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
-            itemCount: _categories.length,
-            itemBuilder: (context, index) {
-              final category = _categories[index];
-              final isSelected = category['name'] == widget.currentCategory;
+          const SizedBox(height: 12),
+          // Grid of category buttons - scrollable
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  children: [
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1.6,
+                          ),
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        final isSelected =
+                            category['name'] == widget.currentCategory;
 
-              return InkWell(
-                onTap: () {
-                  widget.onCategoryChanged(category['name'] as String);
-                  if (!widget.isSearchExpanded) {
-                    setState(() {
-                      _isDropdownOpen = false;
-                    });
-                  }
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? (category['color'] as Color).withOpacity(0.3)
-                        : (category['color'] as Color).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? category['color'] as Color
-                          : (category['color'] as Color).withOpacity(0.5),
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Main content - perfectly centered
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              category['icon'] as IconData,
-                              color: isSelected
-                                  ? category['color'] as Color
-                                  : Colors.white70,
-                              size: 24,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
+                        return InkWell(
+                          onTap: () {
+                            widget.onCategoryChanged(
                               category['name'] as String,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                            );
+                            if (!widget.isSearchExpanded) {
+                              setState(() {
+                                _isDropdownOpen = false;
+                              });
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? (category['color'] as Color).withOpacity(
+                                      0.3,
+                                    )
+                                  : (category['color'] as Color).withOpacity(
+                                      0.1,
+                                    ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
                                 color: isSelected
                                     ? category['color'] as Color
-                                    : Colors.white70,
+                                    : (category['color'] as Color).withOpacity(
+                                        0.5,
+                                      ),
+                                width: isSelected ? 2 : 1,
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                          ],
-                        ),
-                      ),
-                      // Count badge overlay - positioned absolutely
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF666666),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Theme.of(context).cardColor,
-                              width: 1,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Main content - perfectly centered
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        category['icon'] as IconData,
+                                        color: isSelected
+                                            ? category['color'] as Color
+                                            : Colors.white70,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        category['name'] as String,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          color: isSelected
+                                              ? category['color'] as Color
+                                              : Colors.white70,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Count badge overlay - positioned absolutely
+                                Positioned(
+                                  right: -2,
+                                  top: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF666666),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Theme.of(context).cardColor,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    child: Text(
+                                      '${_getCategoryCount(category['name'] as String)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            '${_getCategoryCount(category['name'] as String)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          // Deleted button at bottom right
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              InkWell(
-                onTap: () {
-                  widget.onCategoryChanged('Deleted');
-                  if (!widget.isSearchExpanded) {
-                    setState(() {
-                      _isDropdownOpen = false;
-                    });
-                  }
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.currentCategory == 'Deleted'
-                        ? Colors.red.withOpacity(0.2)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: widget.currentCategory == 'Deleted'
-                          ? Colors.red
-                          : Colors.red.withOpacity(0.5),
-                      width: widget.currentCategory == 'Deleted' ? 2 : 1,
+                        );
+                      },
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.delete,
-                        color: widget.currentCategory == 'Deleted'
-                            ? Colors.red
-                            : Colors.red.withOpacity(0.7),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Deleted',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: widget.currentCategory == 'Deleted'
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: widget.currentCategory == 'Deleted'
-                              ? Colors.red
-                              : Colors.red.withOpacity(0.7),
+                    const SizedBox(height: 12),
+                    // Deleted button at bottom right
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            widget.onCategoryChanged('Deleted');
+                            if (!widget.isSearchExpanded) {
+                              setState(() {
+                                _isDropdownOpen = false;
+                              });
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: widget.currentCategory == 'Deleted'
+                                  ? Colors.red.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: widget.currentCategory == 'Deleted'
+                                    ? Colors.red
+                                    : Colors.red.withOpacity(0.5),
+                                width: widget.currentCategory == 'Deleted'
+                                    ? 2
+                                    : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.delete,
+                                  color: widget.currentCategory == 'Deleted'
+                                      ? Colors.red
+                                      : Colors.red.withOpacity(0.7),
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Deleted',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight:
+                                        widget.currentCategory == 'Deleted'
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: widget.currentCategory == 'Deleted'
+                                        ? Colors.red
+                                        : Colors.red.withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),

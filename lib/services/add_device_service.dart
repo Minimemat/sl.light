@@ -316,15 +316,12 @@ class DeviceDiscoveryService {
         final cfg = jsonDecode(response.body);
         final mqtt = cfg['if']?['mqtt'];
         if (mqtt == null) continue;
-        final pskLength = mqtt['pskl'] is int
-            ? mqtt['pskl']
-            : (mqtt['pskl'] is String ? int.tryParse(mqtt['pskl']) : null);
         final topics = mqtt['topics'];
         if (mqtt['en'] == true &&
             mqtt['broker'] == broker &&
             mqtt['cid'] == clientId &&
             mqtt['user'] == username &&
-            (pskLength == password.length) &&
+            mqtt['psk'] == password &&
             topics != null &&
             topics['device'] == 'wled/$clientId' &&
             topics['group'] == 'wled/all') {

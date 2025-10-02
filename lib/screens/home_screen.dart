@@ -8,6 +8,7 @@ import '../widgets/edit_devices_drawer.dart';
 import '../widgets/device_add_flow.dart';
 import '../widgets/device_add_widget.dart';
 import '../widgets/manual_device_widget.dart';
+import 'welcome_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -397,6 +398,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pop(context);
               context.read<AuthBloc>().add(AuthLogoutRequested());
+              // Immediately navigate to welcome screen
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                (route) => false,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

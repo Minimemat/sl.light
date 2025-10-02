@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import '../models/preset.dart';
 import '../data/effects_database.dart';
@@ -222,12 +223,12 @@ class PresetCard extends StatelessWidget {
       elevation: preset.isSelected ? 8.0 : 2.0,
       color: cardColor,
       margin: const EdgeInsets.symmetric(vertical: 4.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-        side: preset.isUserCreated
-            ? const BorderSide(color: Colors.black, width: 1.0)
-            : BorderSide.none,
-      ),
+      shape: preset.isUserCreated
+          ? DashedRoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              side: const BorderSide(color: Colors.grey, width: 1.0),
+            )
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -355,5 +356,58 @@ class PresetCard extends StatelessWidget {
       }
     }
     return [255, 255, 255, 0];
+  }
+}
+
+class DashedRoundedRectangleBorder extends RoundedRectangleBorder {
+  final List<double> dashPattern;
+
+  const DashedRoundedRectangleBorder({
+    super.side = const BorderSide(),
+    super.borderRadius = BorderRadius.zero,
+    this.dashPattern = const <double>[6, 3],
+  });
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    if (side.style == BorderStyle.none) return;
+
+    final RRect rrect = borderRadius.resolve(textDirection).toRRect(rect);
+    final Path path = Path()..addRRect(rrect);
+    final Path dashed = _dashPath(path, dashPattern);
+
+    final Paint paint = side.toPaint()..style = PaintingStyle.stroke;
+    canvas.drawPath(dashed, paint);
+  }
+
+  Path _dashPath(Path source, List<double> dashArray) {
+    final Path dest = Path();
+    for (final ui.PathMetric metric in source.computeMetrics()) {
+      double distance = 0.0;
+      int index = 0;
+      bool draw = true;
+      while (distance < metric.length) {
+        final double len = dashArray[index % dashArray.length];
+        final double next = (distance + len)
+            .clamp(0.0, metric.length)
+            .toDouble();
+        if (draw) {
+          dest.addPath(metric.extractPath(distance, next), Offset.zero);
+        }
+        distance = next;
+        draw = !draw;
+        index++;
+      }
+    }
+    return dest;
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return DashedRoundedRectangleBorder(
+      side: side.scale(t),
+      borderRadius: borderRadius * t,
+      dashPattern: dashPattern.map((d) => d * t).toList(),
+    );
   }
 }

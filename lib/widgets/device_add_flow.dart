@@ -52,7 +52,7 @@ class DeviceAddFlow {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'A device with this MAC address is already registered.',
+                'Device is already registered. Ask the owner to share access or contact us for help.',
               ),
             ),
           );
@@ -224,11 +224,20 @@ class DeviceAddFlow {
           Navigator.of(context).pop(); // Close modal
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('A device with this MAC address already exists.'),
+              content: Text(
+                'Device is already registered. Ask the owner to share access or contact us for help.',
+              ),
             ),
           );
         }
         return;
+      }
+
+      // Get user email from AuthBloc
+      String? userEmail;
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated) {
+        userEmail = authState.user.email;
       }
 
       // Create device
@@ -236,6 +245,7 @@ class DeviceAddFlow {
         mac: mac,
         name: name,
         ip: ip,
+        allowedUsers: userEmail != null ? [userEmail] : [],
       );
 
       // Configure WLED device

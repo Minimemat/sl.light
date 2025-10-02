@@ -64,11 +64,9 @@ class DeviceMqttService {
     if (_activeConnections.containsKey(device.id)) {
       final existingService = _activeConnections[device.id]!;
       if (existingService != this) {
-        // Use the existing connection and attach to its message stream
+        // Use the existing connection without adding another listener
         _client = existingService._client;
         _isConnected = existingService._isConnected;
-        _subscription?.cancel();
-        _subscription = existingService.messages.listen(_handleMessage);
         return;
       }
     }
